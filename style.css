@@ -309,7 +309,7 @@ li {
 .date {
     font-size: 12px;
     color: grey;
-    opacity: 0.7;
+    opacity: 1.0;
 }
 
 .delete-btn {
