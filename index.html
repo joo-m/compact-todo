@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>To-Do App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+    <h1>TO-DO</h1>
+
+    <div class="input-group">
+        <input type="text" id="taskInput" placeholder="enter task:">
+        <input type="date" id="dueDate">
+
+        <select id="priority">
+            <option value="high">High Priority</option>
+            <option value="medium">Medium Priority</option>
+            <option value="low">Low Priority</option>
+            <option value="optional">Optional</option>
+        </select>
+
+        <button onclick="addTask()">Add</button>
+    </div>
+
+    <div class="filters">
+        <button onclick="setFilter('all')">All</button>
+        <button onclick="setFilter('active')">Active</button>
+        <button onclick="setFilter('completed')">Completed</button>
+    </div>
+
+    <div id="priorityFilterContainer" class="priority-filter">
+        <label><input type="checkbox" value="optional" checked> Optional</label>
+        <label><input type="checkbox" value="low" checked> Low</label>
+        <label><input type="checkbox" value="medium" checked> Medium</label>
+        <label><input type="checkbox" value="high" checked> High</label>
+    </div>
+
+    <div class="toggles">
+        <button onclick="toggleDarkMode()">toggle dark mode</button>
+        <button onclick="toggleFocusMode()">hide youtube</button>
+    </div>
+
+    <select id="sortOption" onchange="sortTasks()">
+        <option value="asc">Ascending</option>
+        <option value="desc">Descending</option>
+        <option value="recent">Recently Added</option>
+        <option value="old">Least Recently Added</option>
+    </select>
+
+    <ul id="taskList"></ul>
+
+    <div id="studyStats" class="study-stats">
+        <h3>Study Stats Today</h3>
+        <p>Tasks Completed: <span id="tasksToday">0</span></p>
+        <p>Total Study Time: <span id="studyTime">00:00:00</span></p>
+    </div>
+
+    <div class="side-tools">
+        <div class="tool">
+            <h2>Stopwatch</h2>
+            <div class="time-display" id="stopwatchDisplay">00:00:00.000</div>
+            <div class="tool-controls">
+                <button onclick="toggleStopwatch()" id="stopwatchStart">Start</button>
+                <button onclick="resetStopwatch()" id="stopwatchReset">Reset</button>
+            </div>
+        </div>
+
+        <div class="tool">
+            <h2>Timer</h2>
+            <div class="timer-inputs">
+                <input type="number" id="timerMinutes" min="0" placeholder="Min">
+                <input type="number" id="timerSeconds" min="0" max="59" placeholder="Sec">
+            </div>
+            <div class="time-display" id="timerDisplay">00:00</div>
+            <div class="tool-controls">
+                <button onclick="toggleTimer()" id="timerStart">Start</button>
+                <button onclick="resetTimer()" id="timerReset">Reset</button>
+                <button onclick="startPomodoro()">Pomodoro</button>
+            </div>
+        </div>
+
+        <div class="tool youtube-tool">
+            <h2>YouTube Search + Watch</h2>
+            <div class="youtube-controls">
+                <input type="text" id="youtubeSearchInput" placeholder="Search YouTube...">
+                <button onclick="searchYouTube()">Search</button>
+            </div>
+            <div class="youtube-controls">
+                <input type="text" id="youtubeUrlInput" placeholder="Video URL or ID...">
+                <button onclick="watchYouTube()">Watch</button>
+            </div>
+            <iframe id="youtubePlayer" class="youtube-player" src="" allowfullscreen></iframe>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
