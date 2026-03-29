@@ -5,38 +5,7 @@ body {
     justify-content: center;
     margin-top: 60px;
     position: relative;
-    overflow: hidden;
-}
-
-body::before {
-    content: "< > < > { } [ ] ( ) | ~ ` ^ & * + - = / \\ < > < > { } [ ] ( ) | ~ ` ^ & * + - = / \\ < > < > { } [ ] ( ) | ~ ` ^ & * + - = / \\";
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 200%;
-    height: 100%;
-    font-family: monospace;
-    font-size: 14px;
-    color: rgba(217, 153, 255, 0.05);
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    line-height: 1.5;
-    z-index: 0;
-    pointer-events: none;
-    animation: floatAscii 60s linear infinite;
-    overflow: hidden;
-}
-
-@keyframes floatAscii {
-    0% {
-        transform: translateX(0) translateY(0);
-    }
-    50% {
-        transform: translateX(-50px) translateY(-20px);
-    }
-    100% {
-        transform: translateX(0) translateY(0);
-    }
+    overflow-y: auto;
 }
 
 .app {
@@ -146,6 +115,12 @@ body::before {
 .study-stats p {
     margin: 5px 0;
     font-size: 0.9rem;
+}
+
+.all-tasks-completed {
+    margin-top: 15px;
+    font-size: 1.2rem !important;
+    font-weight: bold !important;
 }
 
 .toggles button:nth-child(1) {

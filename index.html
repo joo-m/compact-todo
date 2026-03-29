@@ -8,7 +8,7 @@
 <body>
 
 <div class="app">
-    <h1>TO-DO</h1>
+    <h1>TO-DO Studies</h1>
 
     <div class="input-group">
         <input type="text" id="taskInput" placeholder="enter task:">
@@ -52,9 +52,16 @@
     <ul id="taskList"></ul>
 
     <div id="studyStats" class="study-stats">
-        <h3>Study Stats Today</h3>
-        <p>Tasks Completed: <span id="tasksToday">0</span></p>
-        <p>Total Study Time: <span id="studyTime">00:00:00</span></p>
+        <h3>Study Stats</h3>
+        <p>High Priority Completed: <span id="highCompleted">0</span>/<span id="highTotal">0</span></p>
+        <p>Medium Priority Completed: <span id="mediumCompleted">0</span>/<span id="mediumTotal">0</span></p>
+        <p>Low Priority Completed: <span id="lowCompleted">0</span>/<span id="lowTotal">0</span></p>
+        <p>Optional Priority Completed: <span id="optionalCompleted">0</span>/<span id="optionalTotal">0</span></p>
+        <p>Tasks Completed Today: <span id="tasksToday">0</span></p>
+        <p>Total Study Time Today: <span id="studyTime">00:00:00</span></p>
+        <p>Total Study Time This Week: <span id="studyTimeWeek">00:00:00</span></p>
+        <p>Total Study Time This Year: <span id="studyTimeYear">00:00:00</span></p>
+        <p class="all-tasks-completed"><span id="allTasksCompletedPercent">0</span>% (<span id="allTasksCompletedFraction">0</span>/<span id="allTasksTotal">0</span>) of all tasks completed</p>
     </div>
 
     <div class="side-tools">

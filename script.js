@@ -2,6 +2,8 @@ let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 let currentFilter = localStorage.getItem("currentFilter") || "all";
 let currentSort = localStorage.getItem("currentSort") || "asc";
 let totalStudyTime = 0;
+let totalStudyTimeThisWeek = 0;
+let totalStudyTimeThisYear = 0;
 let tasksCompletedToday = 0;
 let isPomodoro = false;
 
@@ -106,6 +108,8 @@ function saveStopwatchState() {
     localStorage.setItem("stopwatchRunning", String(stopwatchRunning));
     localStorage.setItem("stopwatchStart", String(stopwatchStart));
     localStorage.setItem("totalStudyTime", String(totalStudyTime));
+    localStorage.setItem("totalStudyTimeThisWeek", String(totalStudyTimeThisWeek));
+    localStorage.setItem("totalStudyTimeThisYear", String(totalStudyTimeThisYear));
 }
 
 function formatStopwatch(ms) {
@@ -133,7 +137,17 @@ function startStopwatchInterval() {
     if (stopwatchInterval) return;
     stopwatchInterval = setInterval(() => {
         stopwatchElapsed = Date.now() - stopwatchStart;
-        if (stopwatchRunning && !timerRunning) totalStudyTime += 100;
+        if (stopwatchRunning) {
+            if (timerRunning) {
+                totalStudyTime += 50; // half speed when both active
+                totalStudyTimeThisWeek += 50;
+                totalStudyTimeThisYear += 50;
+            } else {
+                totalStudyTime += 100; // full speed when only stopwatch
+                totalStudyTimeThisWeek += 100;
+                totalStudyTimeThisYear += 100;
+            }
+        }
         updateStopwatchDisplay();
         updateStudyTimeDisplay();
         saveStopwatchState();
@@ -198,7 +212,15 @@ function startTimerInterval() {
     timerInterval = setInterval(() => {
         if (timerRunning) {
             timerRemaining = Math.max(0, timerEndTime - Date.now());
-            if (timerRunning && !stopwatchRunning) totalStudyTime += 250;
+            if (stopwatchRunning) {
+                totalStudyTime += 125; // half speed when both active
+                totalStudyTimeThisWeek += 125;
+                totalStudyTimeThisYear += 125;
+            } else {
+                totalStudyTime += 250; // full speed when only timer
+                totalStudyTimeThisWeek += 250;
+                totalStudyTimeThisYear += 250;
+            }
             updateTimerDisplay();
             updateStudyTimeDisplay();
             saveTimerState();
@@ -356,7 +378,17 @@ function renderTasks() {
 
         const date = document.createElement("div");
         date.className = "date";
-        date.textContent = task.date ? "Due: " + task.date : "";
+        date.style.cursor = "pointer";
+        date.textContent = task.date ? "Due: " + task.date : "(click to set date)";
+        
+        date.onclick = () => {
+            const newDate = prompt("Enter due date (format: YYYY-MM-DD) or leave blank to remove:", task.date || "");
+            if (newDate !== null) {
+                task.date = newDate;
+                saveTasks();
+                renderTasks();
+            }
+        };
 
         li.appendChild(header);
         li.appendChild(date);
@@ -368,10 +400,35 @@ function updateTasksToday() {
     const today = new Date().toDateString();
     tasksCompletedToday = tasks.filter(task => task.completed && task.completedAt && new Date(task.completedAt).toDateString() === today).length;
     document.getElementById('tasksToday').textContent = tasksCompletedToday;
+    updatePriorityStats();
+}
+
+function updatePriorityStats() {
+    const today = new Date().toDateString();
+    const todaysTasks = tasks.filter(task => new Date(task.createdAt).toDateString() === today || !task.date);
+    
+    const priorities = ['high', 'medium', 'low', 'optional'];
+    let totalAllTasks = tasks.length;
+    let totalCompleted = tasks.filter(task => task.completed).length;
+    
+    priorities.forEach(priority => {
+        const allTasksWithPriority = tasks.filter(task => task.priority === priority);
+        const completedWithPriority = allTasksWithPriority.filter(task => task.completed).length;
+        
+        document.getElementById(`${priority}Completed`).textContent = completedWithPriority;
+        document.getElementById(`${priority}Total`).textContent = allTasksWithPriority.length;
+    });
+    
+    const percentComplete = totalAllTasks > 0 ? Math.round((totalCompleted / totalAllTasks) * 100) : 0;
+    document.getElementById('allTasksCompletedPercent').textContent = percentComplete;
+    document.getElementById('allTasksCompletedFraction').textContent = totalCompleted;
+    document.getElementById('allTasksTotal').textContent = totalAllTasks;
 }
 
 function updateStudyTimeDisplay() {
     document.getElementById('studyTime').textContent = formatTime(totalStudyTime);
+    document.getElementById('studyTimeWeek').textContent = formatTime(totalStudyTimeThisWeek);
+    document.getElementById('studyTimeYear').textContent = formatTime(totalStudyTimeThisYear);
 }
 
 function sortTasks() {
@@ -421,7 +478,7 @@ document.getElementById("taskInput").addEventListener("keypress", function (e) {
     }
 });
 
-// Daily reset at 12am
+// Daily, Weekly, and Yearly reset
 function checkAndResetDaily() {
     const lastResetDate = localStorage.getItem("lastResetDate");
     const today = new Date().toDateString();
@@ -434,6 +491,37 @@ function checkAndResetDaily() {
     }
 }
 
+function checkAndResetWeekly() {
+    const lastResetWeek = localStorage.getItem("lastResetWeek");
+    const currentWeek = getWeekNumber();
+    
+    if (lastResetWeek !== currentWeek) {
+        totalStudyTimeThisWeek = 0;
+        localStorage.setItem("lastResetWeek", currentWeek);
+        localStorage.setItem("totalStudyTimeThisWeek", "0");
+    }
+}
+
+function checkAndResetYearly() {
+    const lastResetYear = localStorage.getItem("lastResetYear");
+    const currentYear = new Date().getFullYear().toString();
+    
+    if (lastResetYear !== currentYear) {
+        totalStudyTimeThisYear = 0;
+        localStorage.setItem("lastResetYear", currentYear);
+        localStorage.setItem("totalStudyTimeThisYear", "0");
+    }
+}
+
+function getWeekNumber() {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 1);
+    const diff = now - start;
+    const oneDay = 1000 * 60 * 60 * 24;
+    return Math.floor(diff / oneDay / 7) + "_" + now.getFullYear();
+}
+
+
 // persistence
 if (localStorage.getItem("darkMode") === "true") {
     document.body.classList.add("dark");
@@ -443,6 +531,8 @@ if (localStorage.getItem("focusMode") === "true") {
 }
 
 checkAndResetDaily();
+checkAndResetWeekly();
+checkAndResetYearly();
 
 document.getElementById("sortOption").value = currentSort;
 
@@ -462,6 +552,8 @@ if (typeof Notification !== "undefined" && Notification.permission === "default"
 
 function loadTimerAndStopwatchState() {
     totalStudyTime = Number(localStorage.getItem("totalStudyTime")) || 0;
+    totalStudyTimeThisWeek = Number(localStorage.getItem("totalStudyTimeThisWeek")) || 0;
+    totalStudyTimeThisYear = Number(localStorage.getItem("totalStudyTimeThisYear")) || 0;
     stopwatchElapsed = Number(localStorage.getItem("stopwatchElapsed")) || 0;
     stopwatchRunning = localStorage.getItem("stopwatchRunning") === "true";
     stopwatchStart = Number(localStorage.getItem("stopwatchStart")) || 0;
