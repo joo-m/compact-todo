@@ -240,6 +240,17 @@ body.focus .toggles button:nth-child(2) {
     background: #984cf5;
 }
 
+.toggles button:nth-child(3),
+.toggles button:nth-child(4),
+.toggles button:nth-child(5),
+.toggles button:nth-child(6) {
+    transition: background-color 0.2s;
+}
+
+.toggles button.active {
+    background: #984cf5;
+}
+
 body.focus .youtube-tool {
     display: none;
 }
@@ -401,11 +412,6 @@ li {
     border-left: 6px solid rgb(200, 99, 99);
 }
 
-.task-header {
-    display: flex;
-    justify-content: space-between;
-}
-
 .completed {
     text-decoration: line-through;
     opacity: 0.3;
@@ -424,4 +430,123 @@ li {
     padding: 5px;
     border-radius: 5px;
     cursor: pointer;
+}
+
+.priority-btn {
+    background: #6f5bd2;
+    border: none;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: background 0.2s ease;
+}
+
+.priority-btn:hover {
+    background: #4e40ac;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Animations */
+@keyframes taskSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes taskShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+@keyframes taskComplete {
+    0% {
+        opacity: 1;
+        text-decoration-thickness: 0;
+    }
+    50% {
+        transform: rotateZ(2deg);
+        filter: brightness(1.1);
+    }
+    100% {
+        opacity: 0.3;
+        text-decoration-thickness: 2px;
+    }
+}
+
+@keyframes taskPoof {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.05) rotate(5deg);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0) rotate(-180deg) translateY(-30px);
+    }
+}
+
+@keyframes buttonHover {
+    from {
+        transform: scale(1);
+    }
+    to {
+        transform: scale(1.1);
+    }
+}
+
+li.new-task {
+    animation: taskSlideIn 0.4s ease-out, taskShake 0.5s ease-in-out 0.4s;
+}
+
+li.completing {
+    animation: taskComplete 0.6s ease-out forwards;
+}
+
+li.deleting {
+    animation: taskPoof 0.6s ease-in forwards;
+}
+
+button:not(.delete-btn):not(.priority-btn) {
+    transition: transform 0.2s ease;
+}
+
+button:not(.delete-btn):not(.priority-btn):hover {
+    animation: buttonHover 0.2s ease forwards;
+}
+
+.tool-controls button:hover,
+.filters button:hover,
+.spotify-connect-btn:hover,
+.spotify-logout-btn:hover {
+    animation: buttonHover 0.2s ease forwards;
+}
+
+.priority-btn:hover {
+    animation: buttonHover 0.15s ease forwards;
+}
+
+.delete-btn:hover {
+    animation: buttonHover 0.15s ease forwards;
+}
+
+.task-header {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 8px;
 }

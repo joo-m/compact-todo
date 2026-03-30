@@ -44,6 +44,70 @@ function toggleFocusMode() {
     localStorage.setItem("focusMode", isFocus.toString());
 }
 
+function toggleSpotifyBox() {
+    document.getElementById("spotifyPlayer").classList.toggle("hidden");
+    const isHidden = document.getElementById("spotifyPlayer").classList.contains("hidden");
+    localStorage.setItem("spotifyBoxHidden", isHidden.toString());
+    updateToggleButtons();
+}
+
+function toggleStudyStatsBox() {
+    document.getElementById("studyStats").classList.toggle("hidden");
+    const isHidden = document.getElementById("studyStats").classList.contains("hidden");
+    localStorage.setItem("studyStatsHidden", isHidden.toString());
+    updateToggleButtons();
+}
+
+function toggleStopwatchBox() {
+    const stopwatch = document.querySelector(".side-tools .tool:nth-child(1)");
+    stopwatch.classList.toggle("hidden");
+    const isHidden = stopwatch.classList.contains("hidden");
+    localStorage.setItem("stopwatchHidden", isHidden.toString());
+    updateToggleButtons();
+}
+
+function toggleTimerBox() {
+    const timer = document.querySelector(".side-tools .tool:nth-child(2)");
+    timer.classList.toggle("hidden");
+    const isHidden = timer.classList.contains("hidden");
+    localStorage.setItem("timerHidden", isHidden.toString());
+    updateToggleButtons();
+}
+
+function updateToggleButtons() {
+    const toggleButtons = document.querySelectorAll('.toggles button');
+    const spotifyBtn = toggleButtons[2];
+    const statsBtn = toggleButtons[3];
+    const stopwatchBtn = toggleButtons[4];
+    const timerBtn = toggleButtons[5];
+    
+    if (document.getElementById("spotifyPlayer").classList.contains("hidden")) {
+        spotifyBtn.classList.add("active");
+    } else {
+        spotifyBtn.classList.remove("active");
+    }
+    
+    if (document.getElementById("studyStats").classList.contains("hidden")) {
+        statsBtn.classList.add("active");
+    } else {
+        statsBtn.classList.remove("active");
+    }
+    
+    const stopwatch = document.querySelector(".side-tools .tool:nth-child(1)");
+    if (stopwatch && stopwatch.classList.contains("hidden")) {
+        stopwatchBtn.classList.add("active");
+    } else {
+        stopwatchBtn.classList.remove("active");
+    }
+    
+    const timer = document.querySelector(".side-tools .tool:nth-child(2)");
+    if (timer && timer.classList.contains("hidden")) {
+        timerBtn.classList.add("active");
+    } else {
+        timerBtn.classList.remove("active");
+    }
+}
+
 function searchYouTube() {
     const query = document.getElementById('youtubeSearchInput').value.trim();
     if (!query) {
@@ -367,7 +431,26 @@ function renderTasks() {
             task.completed = !task.completed;
             if (task.completed) {
                 task.completedAt = Date.now();
+                li.classList.add('completing');
+                li.addEventListener('animationend', () => {
+                    saveTasks();
+                    renderTasks();
+                }, { once: true });
+            } else {
+                saveTasks();
+                renderTasks();
             }
+        };
+
+        const priorityBtn = document.createElement("button");
+        priorityBtn.textContent = task.priority.charAt(0).toUpperCase();
+        priorityBtn.className = "priority-btn";
+        priorityBtn.title = `Priority: ${task.priority}`;
+        priorityBtn.onclick = () => {
+            const priorities = ['high', 'medium', 'low', 'optional'];
+            const currentIndex = priorities.indexOf(task.priority);
+            const nextIndex = (currentIndex + 1) % priorities.length;
+            task.priority = priorities[nextIndex];
             saveTasks();
             renderTasks();
         };
@@ -379,12 +462,16 @@ function renderTasks() {
         deleteBtn.onclick = () => {
             const originalIndex = tasks.indexOf(task);
             if (originalIndex > -1) {
-                tasks.splice(originalIndex, 1);
-                saveTasks();
-                renderTasks();
+                li.classList.add('deleting');
+                li.addEventListener('animationend', () => {
+                    tasks.splice(originalIndex, 1);
+                    saveTasks();
+                    renderTasks();
+                }, { once: true });
             }
         };
 
+        header.appendChild(priorityBtn);
         header.appendChild(text);
         header.appendChild(deleteBtn);
 
@@ -405,6 +492,12 @@ function renderTasks() {
         li.appendChild(header);
         li.appendChild(date);
         list.appendChild(li);
+        
+        // Add animation for new tasks
+        li.classList.add('new-task');
+        li.addEventListener('animationend', () => {
+            li.classList.remove('new-task');
+        }, { once: true });
     });
 }
 
@@ -551,6 +644,22 @@ if (localStorage.getItem("focusMode") === "true") {
     document.body.classList.add("focus");
 }
 
+// Restore hidden state
+if (localStorage.getItem("spotifyBoxHidden") === "true") {
+    document.getElementById("spotifyPlayer").classList.add("hidden");
+}
+if (localStorage.getItem("studyStatsHidden") === "true") {
+    document.getElementById("studyStats").classList.add("hidden");
+}
+if (localStorage.getItem("stopwatchHidden") === "true") {
+    const stopwatch = document.querySelector(".side-tools .tool:nth-child(1)");
+    stopwatch.classList.add("hidden");
+}
+if (localStorage.getItem("timerHidden") === "true") {
+    const timer = document.querySelector(".side-tools .tool:nth-child(2)");
+    timer.classList.add("hidden");
+}
+
 checkAndResetDaily();
 checkAndResetWeekly();
 checkAndResetYearly();
@@ -618,33 +727,80 @@ function loadTimerAndStopwatchState() {
 }
 
 // Spotify Integration
-const SPOTIFY_CLIENT_ID = 'YOUR_CLIENT_ID_HERE';
-const SPOTIFY_REDIRECT_URI = window.location.href.split('?')[0];
+const SPOTIFY_CLIENT_ID = '65d8610a85544a1082be109c18754d21';
+const SPOTIFY_REDIRECT_URI = window.location.href.split('?')[0].split('#')[0];
 let spotifyAccessToken = localStorage.getItem('spotifyAccessToken');
 let spotifyCurrentTrack = null;
 let spotifyPlaybackState = false;
 
+function generateRandomString(length) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
+async function generateCodeChallenge(codeVerifier) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(codeVerifier);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    return btoa(String.fromCharCode(...new Uint8Array(digest)))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
+}
+
 function getSpotifyAuthUrl() {
-    const scopes = ['streaming', 'user-read-private', 'user-read-email', 'user-read-playback-state', 'user-modify-playback-state', 'user-library-read'];
-    return `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(SPOTIFY_REDIRECT_URI)}&scope=${encodeURIComponent(scopes.join(' '))}`;
+    const codeVerifier = generateRandomString(128);
+    localStorage.setItem('spotify_code_verifier', codeVerifier);
+    const scopes = ['user-read-private', 'user-read-email', 'user-read-playback-state', 'user-modify-playback-state', 'user-library-read'];
+    return `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(SPOTIFY_REDIRECT_URI)}&scope=${encodeURIComponent(scopes.join(' '))}&code_challenge_method=S256`;
 }
 
 function connectSpotify() {
+    if (SPOTIFY_CLIENT_ID === 'YOUR_CLIENT_ID_HERE') {
+        alert('Please set your Spotify Client ID in script.js first');
+        return;
+    }
     window.location.href = getSpotifyAuthUrl();
 }
 
 function checkSpotifyAuth() {
     const hash = window.location.hash;
+    const search = window.location.search;
+    
     if (hash) {
         const params = new URLSearchParams(hash.substring(1));
         const token = params.get('access_token');
         if (token) {
             spotifyAccessToken = token;
             localStorage.setItem('spotifyAccessToken', token);
-            window.location.href = window.location.href.split('?')[0];
+            window.location.href = window.location.href.split('?')[0].split('#')[0];
             showSpotifyPlayer();
+            return;
         }
     }
+    
+    if (search) {
+        const params = new URLSearchParams(search.substring(1));
+        const code = params.get('code');
+        const error = params.get('error');
+        
+        if (error) {
+            alert(`Spotify authentication failed: ${error}`);
+            window.location.href = window.location.href.split('?')[0].split('#')[0];
+            return;
+        }
+        
+        if (code) {
+            alert('Spotify authorization received. For security, you need to set up a backend service to exchange the code for a token. See README for setup instructions.');
+            window.location.href = window.location.href.split('?')[0].split('#')[0];
+            return;
+        }
+    }
+    
     if (spotifyAccessToken) {
         showSpotifyPlayer();
         updateCurrentTrack();
@@ -742,4 +898,5 @@ updateStudyTimeDisplay();
 updateTasksToday();
 attachPriorityCheckboxListeners();
 checkSpotifyAuth();
+updateToggleButtons();
 renderTasks();

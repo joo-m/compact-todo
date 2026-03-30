@@ -65,15 +65,70 @@ No installation required. Open `index.html` in a web browser.
 
 ## Spotify Setup
 
-To use the Spotify Music Player feature:
+The app uses Spotify's Authorization Code Flow with PKCE for security. Due to OAuth2 requirements, **a backend service is needed to exchange the authorization code for an access token**.
+
+### Option 1: Simple Backend Setup (Recommended)
+
+**Requirements**: Node.js installed
 
 1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
 2. Log in or create a new Spotify account
-3. Create a new app and accept the terms
-4. Copy your Client ID
-5. In `script.js`, replace `'YOUR_CLIENT_ID_HERE'` with your actual Client ID
-6. In Spotify Dashboard, add your app's redirect URI (your webpage URL) to the "Redirect URIs" section
-7. Reload the app and click "Connect to Spotify" to authorize
+3. Create a new app
+4. Copy your **Client ID** and **Client Secret**
+5. In Spotify Dashboard, add your redirect URI: `http://127.0.0.1:3000/callback`
+6. Create a file named `server.js` in your project root with the following code:
+
+```javascript
+const express = require('express');
+const cors = require('cors');
+const axios = require('axios');
+require('dotenv').config();
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const SPOTIFY_CLIENT_ID = 'YOUR_CLIENT_ID';
+const SPOTIFY_CLIENT_SECRET = 'YOUR_CLIENT_SECRET';
+const REDIRECT_URI = 'http://127.0.0.1:3000/callback';
+
+app.post('/auth/callback', async (req, res) => {
+    const { code } = req.body;
+    try {
+        const response = await axios.post('https://accounts.spotify.com/api/token', null, {
+            params: {
+                grant_type: 'authorization_code',
+                code,
+                redirect_uri: REDIRECT_URI,
+                client_id: SPOTIFY_CLIENT_ID,
+                client_secret: SPOTIFY_CLIENT_SECRET,
+            },
+        });
+        res.json(response.data);
+    } catch (error) {
+        res.status(400).json({ error: 'Token exchange failed' });
+    }
+});
+
+app.listen(3000, () => console.log('Auth server running on port 3000'));
+```
+
+7. Install dependencies: `npm install express cors axios dotenv`
+8. Create `.env` file with your credentials:
+```
+SPOTIFY_CLIENT_ID=your_client_id
+SPOTIFY_CLIENT_SECRET=your_client_secret
+```
+9. Run: `node server.js`
+10. Update the app to use `http://127.0.0.1:3000/callback` as redirect URI
+11. In `script.js`, update SPOTIFY_CLIENT_ID with your Client ID
+12. Open the app at `http://127.0.0.1:5500` and click "Connect to Spotify"
+
+### Option 2: Use Without Full Authorization (For Testing)
+
+If you just want to see the player UI without real Spotify control:
+- Skip the backend setup
+- The app shows a notification that backend is needed - this is expected behavior
 
 ## Technologies Used
 
