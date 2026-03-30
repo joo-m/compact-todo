@@ -728,7 +728,7 @@ function loadTimerAndStopwatchState() {
 
 // Spotify Integration
 const SPOTIFY_CLIENT_ID = '65d8610a85544a1082be109c18754d21';
-const SPOTIFY_REDIRECT_URI = window.location.href.split('?')[0].split('#')[0];
+const SPOTIFY_REDIRECT_URI = 'http://127.0.0.1:3000/callback'
 let spotifyAccessToken = localStorage.getItem('spotifyAccessToken');
 let spotifyCurrentTrack = null;
 let spotifyPlaybackState = false;
@@ -753,10 +753,8 @@ async function generateCodeChallenge(codeVerifier) {
 }
 
 function getSpotifyAuthUrl() {
-    const codeVerifier = generateRandomString(128);
-    localStorage.setItem('spotify_code_verifier', codeVerifier);
     const scopes = ['user-read-private', 'user-read-email', 'user-read-playback-state', 'user-modify-playback-state', 'user-library-read'];
-    return `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(SPOTIFY_REDIRECT_URI)}&scope=${encodeURIComponent(scopes.join(' '))}&code_challenge_method=S256`;
+    return `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(SPOTIFY_REDIRECT_URI)}&scope=${encodeURIComponent(scopes.join(' '))}`;
 }
 
 function connectSpotify() {
@@ -795,8 +793,28 @@ function checkSpotifyAuth() {
         }
         
         if (code) {
-            alert('Spotify authorization received. For security, you need to set up a backend service to exchange the code for a token. See README for setup instructions.');
-            window.location.href = window.location.href.split('?')[0].split('#')[0];
+            fetch('http://127.0.0.1:3000/auth/callback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code })
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log('Token received:', data);
+
+                spotifyAccessToken = data.access_token;
+                localStorage.setItem('spotifyAccessToken', data.access_token);
+
+                // clean URL (remove ?code=...)
+                window.history.replaceState({}, document.title, window.location.pathname);
+
+                showSpotifyPlayer();
+                updateCurrentTrack();
+            })
+            .catch(err => {
+                console.error('Auth error:', err);
+            });
+
             return;
         }
     }
@@ -829,23 +847,44 @@ async function updateCurrentTrack() {
         const response = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
             headers: { 'Authorization': `Bearer ${spotifyAccessToken}` }
         });
-        if (response.status === 204 || response.status === 401) {
+        if (response.status === 204) {
+            document.getElementById('currentTrack').textContent = 'Nothing playing';
+            document.getElementById('albumArt').src = '';
+            spotifyPlaybackState = false;
+            document.getElementById('playPauseBtn').textContent = '▶';
+            setTimeout(updateCurrentTrack, 5000);
+            return;
+        }
+        if (response.status === 401) {
             spotifyAccessToken = null;
             localStorage.removeItem('spotifyAccessToken');
             hideSpotifyPlayer();
             return;
         }
+        if (!response.ok) {
+            console.error('Error fetching current track, status:', response.status);
+            setTimeout(updateCurrentTrack, 5000);
+            return;
+        }
+
         const data = await response.json();
         if (data && data.item) {
             spotifyCurrentTrack = data.item;
             const trackName = data.item.name;
             const artist = data.item.artists[0].name;
             document.getElementById('currentTrack').textContent = `${trackName} by ${artist}`;
-            if (data.item.album.images[0]) {
+            if (data.item.album && data.item.album.images && data.item.album.images[0]) {
                 document.getElementById('albumArt').src = data.item.album.images[0].url;
+            } else {
+                document.getElementById('albumArt').src = '';
             }
             spotifyPlaybackState = data.is_playing;
             document.getElementById('playPauseBtn').textContent = spotifyPlaybackState ? '⏸' : '▶';
+        } else {
+            document.getElementById('currentTrack').textContent = 'Nothing playing';
+            document.getElementById('albumArt').src = '';
+            spotifyPlaybackState = false;
+            document.getElementById('playPauseBtn').textContent = '▶';
         }
     } catch (error) {
         console.error('Error fetching current track:', error);
@@ -856,14 +895,25 @@ async function updateCurrentTrack() {
 async function togglePlayback() {
     if (!spotifyAccessToken) return;
     try {
-        const method = spotifyPlaybackState ? 'PUT' : 'PUT';
         const endpoint = spotifyPlaybackState ? 'https://api.spotify.com/v1/me/player/pause' : 'https://api.spotify.com/v1/me/player/play';
-        await fetch(endpoint, {
-            method: method,
-            headers: { 'Authorization': `Bearer ${spotifyAccessToken}` }
+        const response = await fetch(endpoint, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${spotifyAccessToken}`,
+                'Content-Type': 'application/json'
+            }
         });
+        if (!response.ok) {
+            console.error('Error toggling playback:', response.status, await response.text());
+            if (response.status === 404) {
+                alert('Cannot control playback: no active device. Open the Spotify app on a device and play any track first.');
+            }
+            return;
+        }
+
         spotifyPlaybackState = !spotifyPlaybackState;
         document.getElementById('playPauseBtn').textContent = spotifyPlaybackState ? '⏸' : '▶';
+        await updateCurrentTrack();
     } catch (error) {
         console.error('Error toggling playback:', error);
     }
@@ -872,10 +922,19 @@ async function togglePlayback() {
 async function nextTrack() {
     if (!spotifyAccessToken) return;
     try {
-        await fetch('https://api.spotify.com/v1/me/player/next', {
+        const response = await fetch('https://api.spotify.com/v1/me/player/next', {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${spotifyAccessToken}` }
+            headers: {
+                'Authorization': `Bearer ${spotifyAccessToken}`,
+                'Content-Type': 'application/json'
+            }
         });
+        if (!response.ok) {
+            console.error('Error skipping to next track:', response.status, await response.text());
+            if (response.status === 404) alert('No active Spotify playback device found. Open Spotify and play first.');
+            return;
+        }
+        await updateCurrentTrack();
     } catch (error) {
         console.error('Error skipping to next track:', error);
     }
@@ -884,10 +943,19 @@ async function nextTrack() {
 async function previousTrack() {
     if (!spotifyAccessToken) return;
     try {
-        await fetch('https://api.spotify.com/v1/me/player/previous', {
+        const response = await fetch('https://api.spotify.com/v1/me/player/previous', {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${spotifyAccessToken}` }
+            headers: {
+                'Authorization': `Bearer ${spotifyAccessToken}`,
+                'Content-Type': 'application/json'
+            }
         });
+        if (!response.ok) {
+            console.error('Error skipping to previous track:', response.status, await response.text());
+            if (response.status === 404) alert('No active Spotify playback device found. Open Spotify and play first.');
+            return;
+        }
+        await updateCurrentTrack();
     } catch (error) {
         console.error('Error skipping to previous track:', error);
     }

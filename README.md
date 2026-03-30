@@ -55,6 +55,8 @@ A comprehensive to-do list application with task management, timers, stopwatch, 
    - Use play/pause, next, and previous buttons to control playback.
    - Click "Logout" to disconnect your Spotify account.
    - **Note**: Requires Spotify Web API credentials setup in the app configuration.
+   - **Important**: Ensure you have an active Spotify playback device (desktop/mobile) running in the same account; otherwise controls return 404 and the app shows "Nothing playing".
+   - If you get playback-control failures, open the Spotify desktop/mobile app and start a track first, then use the app buttons.
    - You can run both stopwatch and timer at the same time.
    - Study time will only count from one device to prevent inflated time tracking.
    - When one is paused or finished, the other automatically resumes study time counting.
@@ -75,7 +77,9 @@ The app uses Spotify's Authorization Code Flow with PKCE for security. Due to OA
 2. Log in or create a new Spotify account
 3. Create a new app
 4. Copy your **Client ID** and **Client Secret**
-5. In Spotify Dashboard, add your redirect URI: `http://127.0.0.1:3000/callback`
+5. In Spotify Dashboard, add your redirect URI (this is where Spotify will send the authorization code).
+   Example for local development: http://127.0.0.1:3000/callback
+   You can choose a different port or localhost address, but it must match exactly in your server config.
 6. Create a file named `server.js` in your project root with the following code:
 
 ```javascript
@@ -88,9 +92,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const SPOTIFY_CLIENT_ID = 'YOUR_CLIENT_ID';
-const SPOTIFY_CLIENT_SECRET = 'YOUR_CLIENT_SECRET';
-const REDIRECT_URI = 'http://127.0.0.1:3000/callback';
+const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
+const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
+const REDIRECT_URI = 'http://127.0.0.1:3000/callback'; // Must match your Spotify App Redirect URI
+const FRONTEND_URI = process.env.FRONTEND_URI;
 
 app.post('/auth/callback', async (req, res) => {
     const { code } = req.body;
@@ -110,20 +115,35 @@ app.post('/auth/callback', async (req, res) => {
     }
 });
 
+app.get('/callback', (req, res) => {
+    const code = req.query.code;
+    res.redirect(`${FRONTEND_URI}/?code=${code}`);
+});
+
 app.listen(3000, () => console.log('Auth server running on port 3000'));
 ```
 
 7. Install dependencies: `npm install express cors axios dotenv`
-8. Create `.env` file with your credentials:
+8. Create `.env` file with your credentials (replace your_client_id and your_client_secret with your client id & secret) (do NOT push to GitHub! your client secret MUST NOT BE REVEALED TO OTHERS):
 ```
-SPOTIFY_CLIENT_ID=your_client_id
-SPOTIFY_CLIENT_SECRET=your_client_secret
+SPOTIFY_CLIENT_ID=your_client_id_here
+SPOTIFY_CLIENT_SECRET=your_client_secret_here
+FRONTEND_URI=http://127.0.0.1:5500
 ```
 9. Run: `node server.js`
 10. Update the app to use `http://127.0.0.1:3000/callback` as redirect URI
-11. In `script.js`, update SPOTIFY_CLIENT_ID with your Client ID
-12. Open the app at `http://127.0.0.1:5500` and click "Connect to Spotify"
+11. In `script.js`, update SPOTIFY_CLIENT_ID with your Client ID:
+```
+const SPOTIFY_CLIENT_ID = 'your_client_id_here';
+const SPOTIFY_REDIRECT_URI = 'http://127.0.0.1:3000/callback';
+```
+12. Open your index.html in a browser (`http://127.0.0.1:5500` or your chosen frontend port) and click "Connect to Spotify" to authorize your account.
 
+***Notes for users***
+You must have an active Spotify playback device (desktop or mobile) running the same account; otherwise, the player will show “Nothing playing” and controls wont work.
+If playback fails, start a track in the Spotify app first, then try controlling it from the web app.
+If you change ports or URLs, update both the Spotify Dashboard redirect URI and the FRONTEND_URI in .env.
+.env must not be pushed to GitHub!!! Your server.js is safe to share; it only reads secrets from .env.
 ### Option 2: Use Without Full Authorization (For Testing)
 
 If you just want to see the player UI without real Spotify control:
