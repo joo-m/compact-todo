@@ -6,6 +6,8 @@ let totalStudyTimeThisWeek = 0;
 let totalStudyTimeThisYear = 0;
 let tasksCompletedToday = 0;
 let isPomodoro = false;
+let lastStopwatchUpdate = 0;
+let lastTimerUpdate = 0;
 
 function saveTasks() {
     localStorage.setItem("tasks", JSON.stringify(tasks));
@@ -135,17 +137,21 @@ function updateStopwatchDisplay() {
 
 function startStopwatchInterval() {
     if (stopwatchInterval) return;
+    lastStopwatchUpdate = Date.now();
     stopwatchInterval = setInterval(() => {
-        stopwatchElapsed = Date.now() - stopwatchStart;
+        const now = Date.now();
+        const delta = now - lastStopwatchUpdate;
+        lastStopwatchUpdate = now;
+        stopwatchElapsed = now - stopwatchStart;
         if (stopwatchRunning) {
             if (timerRunning) {
-                totalStudyTime += 50; // half speed when both active
-                totalStudyTimeThisWeek += 50;
-                totalStudyTimeThisYear += 50;
+                totalStudyTime += delta / 2; // half speed when both active
+                totalStudyTimeThisWeek += delta / 2;
+                totalStudyTimeThisYear += delta / 2;
             } else {
-                totalStudyTime += 100; // full speed when only stopwatch
-                totalStudyTimeThisWeek += 100;
-                totalStudyTimeThisYear += 100;
+                totalStudyTime += delta; // full speed when only stopwatch
+                totalStudyTimeThisWeek += delta;
+                totalStudyTimeThisYear += delta;
             }
         }
         updateStopwatchDisplay();
@@ -167,6 +173,7 @@ function toggleStopwatch() {
 
     stopwatchRunning = true;
     stopwatchStart = Date.now() - stopwatchElapsed;
+    lastStopwatchUpdate = Date.now();
     startBtn.textContent = "Pause";
     saveStopwatchState();
     startStopwatchInterval();
@@ -209,17 +216,21 @@ function updateTimerDisplay() {
 
 function startTimerInterval() {
     if (timerInterval) return;
+    lastTimerUpdate = Date.now();
     timerInterval = setInterval(() => {
         if (timerRunning) {
-            timerRemaining = Math.max(0, timerEndTime - Date.now());
+            const now = Date.now();
+            const delta = now - lastTimerUpdate;
+            lastTimerUpdate = now;
+            timerRemaining = Math.max(0, timerEndTime - now);
             if (stopwatchRunning) {
-                totalStudyTime += 125; // half speed when both active
-                totalStudyTimeThisWeek += 125;
-                totalStudyTimeThisYear += 125;
+                totalStudyTime += delta / 2; // half speed when both active
+                totalStudyTimeThisWeek += delta / 2;
+                totalStudyTimeThisYear += delta / 2;
             } else {
-                totalStudyTime += 250; // full speed when only timer
-                totalStudyTimeThisWeek += 250;
-                totalStudyTimeThisYear += 250;
+                totalStudyTime += delta; // full speed when only timer
+                totalStudyTimeThisWeek += delta;
+                totalStudyTimeThisYear += delta;
             }
             updateTimerDisplay();
             updateStudyTimeDisplay();
@@ -274,6 +285,7 @@ function toggleTimer() {
 
     timerRunning = true;
     timerEndTime = Date.now() + timerRemaining;
+    lastTimerUpdate = Date.now();
     startBtn.textContent = "Pause";
     saveTimerState();
     startTimerInterval();
@@ -564,6 +576,7 @@ function loadTimerAndStopwatchState() {
         }
         document.getElementById("stopwatchStart").textContent = "Pause";
         startStopwatchInterval();
+        lastStopwatchUpdate = Date.now();
     } else {
         document.getElementById("stopwatchStart").textContent = "Start";
     }
@@ -585,6 +598,7 @@ function loadTimerAndStopwatchState() {
         } else {
             document.getElementById("timerStart").textContent = "Pause";
             startTimerInterval();
+            lastTimerUpdate = Date.now();
         }
     } else {
         document.getElementById("timerStart").textContent = "Start";
