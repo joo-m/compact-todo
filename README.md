@@ -180,6 +180,6 @@ If you just want to see the player UI without real Spotify control:
 - CSS3
 - JavaScript (ES6+)
 
-## Author
+### Author
 
 JOOWON MAENG (joo1.maeng@gmail.com)
