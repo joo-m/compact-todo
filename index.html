@@ -81,6 +81,7 @@
             <div class="currently-playing">
                 <p>Now Playing: <span id="currentTrack">Nothing playing</span></p>
                 <img id="albumArt" class="album-art" src="" alt="Album Art">
+                <p class="next-track">Next: <span id="nextTrack">None</span></p>
             </div>
             <div class="spotify-controls">
                 <button onclick="previousTrack()">⏮</button>
@@ -91,6 +92,10 @@
                 <span id="currentTime">0:00</span>
                 <input type="range" id="progressSlider" min="0" max="100" value="0" step="1">
                 <span id="totalTime">0:00</span>
+            </div>
+            <div class="spotify-volume">
+                <span>Volume</span>
+                <input type="range" id="volumeSlider" min="0" max="100" value="50" step="1">
             </div>
             <button onclick="logoutSpotify()" class="spotify-logout-btn">Logout</button>
         </div>

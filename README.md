@@ -15,7 +15,7 @@ A comprehensive to-do list application with task management, timers, stopwatch, 
 - **Pomodoro Timer**: Quick 25-minute study sessions with break reminders.
 - **Study Stats**: Track tasks completed today, total study time (daily/weekly/yearly), and priority completion stats. Stats automatically reset at midnight each day. Displays important tasks (high/medium priority) completion percentage prominently.
 - **Intelligent Study Time Tracking**: Counts study time from either stopwatch or timer, preventing double-counting when both are running simultaneously.
-- **Spotify Music Player**: Connect your Spotify account and control music playback directly in the app. View currently playing track with album art, skip to next/previous tracks, and seek through songs with progress bars.
+- **Spotify Music Player**: Connect your Spotify account and control music playback directly in the app. View currently playing track with album art, skip to next/previous tracks, seek through songs with progress bars, adjust volume, and preview the next track in queue.
 - **Now Playing Marquee**: A scrolling marquee at the top of the screen displaying "now playing: [Track] by [Artist]" infinitely.
 - **Bottom Progress Bar**: A wide, fixed progress slider at the bottom of the screen for easy song seeking.
 - **YouTube**: Search YouTube or watch specific videos directly in the app (can be hidden in Focus Mode).
@@ -41,7 +41,7 @@ A comprehensive to-do list application with task management, timers, stopwatch, 
    - **Stopwatch**: Click "Start" to begin, "Pause" to stop, "Reset" to clear. Tracks study time.
    - **Timer**: Enter minutes and seconds, click "Start" to begin countdown. Use "Pomodoro" for 25-min sessions.
    - **YouTube**: Enter search query and click "Search" (opens in new tab), or enter video URL/ID and click "Watch". Hide with "hide youtube" button.
-   - **Spotify**: Click "Connect to Spotify" to authorize, then control playback with play/pause, next/previous buttons. Use the progress slider in the player or the wide bottom bar to seek.
+   - **Spotify**: Click "Connect to Spotify" to authorize, then control playback with play/pause, next/previous buttons. Use the progress slider in the player or the wide bottom bar to seek. Adjust volume with the volume slider. View the next track in queue below the current track.
 
 5. **Modes and Toggles**:
    - **Dark Mode**: Click "toggle dark mode" button. All UI elements adapt for better visibility.
@@ -56,7 +56,9 @@ A comprehensive to-do list application with task management, timers, stopwatch, 
 
 7. **Spotify Integration**:
    - Requires Spotify Premium for full control.
-   - Progress bars update every 1 second(s).
+   - Progress bars update every 1 second.
+   - Volume slider controls playback volume.
+   - Next track preview shows the upcoming song in queue.
    - Marquee shows current track and artist at the top.
    - Bottom bar provides easy access to seeking across the full screen width.
 

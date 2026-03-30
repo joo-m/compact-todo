@@ -895,7 +895,11 @@ async function updateCurrentTrack() {
             document.getElementById('bottomProgressSlider').value = progressMs;
             document.getElementById('currentTime').textContent = formatSongTime(progressMs);
             document.getElementById('totalTime').textContent = formatSongTime(durationMs);
+            if (data.device && data.device.volume_percent !== undefined) {
+                document.getElementById('volumeSlider').value = data.device.volume_percent;
+            }
             updateMarquee();
+            updateQueue();
         } else {
             spotifyCurrentTrack = null;
             spotifyCurrentArtist = null;
@@ -910,6 +914,7 @@ async function updateCurrentTrack() {
             document.getElementById('currentTime').textContent = '0:00';
             document.getElementById('totalTime').textContent = '0:00';
             updateMarquee();
+            updateQueue();
         }
     } catch (error) {
         console.error('Error fetching current track:', error);
@@ -942,6 +947,46 @@ async function seekPosition(positionMs) {
         }
     } catch (error) {
         console.error('Error seeking position:', error);
+    }
+}
+
+async function setVolume(volume) {
+    if (!spotifyAccessToken) return;
+    try {
+        const response = await fetch(`https://api.spotify.com/v1/me/player/volume?volume_percent=${volume}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${spotifyAccessToken}`
+            }
+        });
+        if (!response.ok) {
+            console.error('Error setting volume:', response.status, await response.text());
+        }
+    } catch (error) {
+        console.error('Error setting volume:', error);
+    }
+}
+
+async function updateQueue() {
+    if (!spotifyAccessToken) return;
+    try {
+        const response = await fetch('https://api.spotify.com/v1/me/player/queue', {
+            headers: { 'Authorization': `Bearer ${spotifyAccessToken}` }
+        });
+        if (response.ok) {
+            const data = await response.json();
+            if (data.queue && data.queue.length > 0) {
+                const next = data.queue[0];
+                document.getElementById('nextTrack').textContent = `${next.name} by ${next.artists[0].name}`;
+            } else {
+                document.getElementById('nextTrack').textContent = 'None';
+            }
+        } else {
+            document.getElementById('nextTrack').textContent = 'None';
+        }
+    } catch (error) {
+        console.error('Error fetching queue:', error);
+        document.getElementById('nextTrack').textContent = 'None';
     }
 }
 
@@ -1020,6 +1065,10 @@ document.getElementById('progressSlider').addEventListener('input', (e) => {
 
 document.getElementById('bottomProgressSlider').addEventListener('input', (e) => {
     seekPosition(e.target.value);
+});
+
+document.getElementById('volumeSlider').addEventListener('input', (e) => {
+    setVolume(e.target.value);
 });
 
 loadTimerAndStopwatchState();
