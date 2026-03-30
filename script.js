@@ -422,6 +422,8 @@ function updatePriorityStats() {
     const priorities = ['high', 'medium', 'low', 'optional'];
     let totalAllTasks = tasks.length;
     let totalCompleted = tasks.filter(task => task.completed).length;
+    let importantTasks = tasks.filter(task => task.priority === 'high' || task.priority === 'medium');
+    let importantCompleted = importantTasks.filter(task => task.completed).length;
     
     priorities.forEach(priority => {
         const allTasksWithPriority = tasks.filter(task => task.priority === priority);
@@ -431,6 +433,13 @@ function updatePriorityStats() {
         document.getElementById(`${priority}Total`).textContent = allTasksWithPriority.length;
     });
     
+    // Important tasks (high priority) stats
+    const importantPercent = importantTasks.length > 0 ? Math.round((importantCompleted / importantTasks.length) * 100) : 0;
+    document.getElementById('importantTasksCompletedPercent').textContent = importantPercent;
+    document.getElementById('importantTasksCompletedFraction').textContent = importantCompleted;
+    document.getElementById('importantTasksTotal').textContent = importantTasks.length;
+    
+    // All tasks stats
     const percentComplete = totalAllTasks > 0 ? Math.round((totalCompleted / totalAllTasks) * 100) : 0;
     document.getElementById('allTasksCompletedPercent').textContent = percentComplete;
     document.getElementById('allTasksCompletedFraction').textContent = totalCompleted;
@@ -608,8 +617,129 @@ function loadTimerAndStopwatchState() {
     updateTimerDisplay();
 }
 
+// Spotify Integration
+const SPOTIFY_CLIENT_ID = 'YOUR_CLIENT_ID_HERE';
+const SPOTIFY_REDIRECT_URI = window.location.href.split('?')[0];
+let spotifyAccessToken = localStorage.getItem('spotifyAccessToken');
+let spotifyCurrentTrack = null;
+let spotifyPlaybackState = false;
+
+function getSpotifyAuthUrl() {
+    const scopes = ['streaming', 'user-read-private', 'user-read-email', 'user-read-playback-state', 'user-modify-playback-state', 'user-library-read'];
+    return `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(SPOTIFY_REDIRECT_URI)}&scope=${encodeURIComponent(scopes.join(' '))}`;
+}
+
+function connectSpotify() {
+    window.location.href = getSpotifyAuthUrl();
+}
+
+function checkSpotifyAuth() {
+    const hash = window.location.hash;
+    if (hash) {
+        const params = new URLSearchParams(hash.substring(1));
+        const token = params.get('access_token');
+        if (token) {
+            spotifyAccessToken = token;
+            localStorage.setItem('spotifyAccessToken', token);
+            window.location.href = window.location.href.split('?')[0];
+            showSpotifyPlayer();
+        }
+    }
+    if (spotifyAccessToken) {
+        showSpotifyPlayer();
+        updateCurrentTrack();
+    }
+}
+
+function showSpotifyPlayer() {
+    document.getElementById('spotifyConnectBtn').style.display = 'none';
+    document.getElementById('spotifyContent').style.display = 'flex';
+}
+
+function hideSpotifyPlayer() {
+    document.getElementById('spotifyConnectBtn').style.display = 'block';
+    document.getElementById('spotifyContent').style.display = 'none';
+}
+
+function logoutSpotify() {
+    spotifyAccessToken = null;
+    localStorage.removeItem('spotifyAccessToken');
+    hideSpotifyPlayer();
+}
+
+async function updateCurrentTrack() {
+    if (!spotifyAccessToken) return;
+    try {
+        const response = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+            headers: { 'Authorization': `Bearer ${spotifyAccessToken}` }
+        });
+        if (response.status === 204 || response.status === 401) {
+            spotifyAccessToken = null;
+            localStorage.removeItem('spotifyAccessToken');
+            hideSpotifyPlayer();
+            return;
+        }
+        const data = await response.json();
+        if (data && data.item) {
+            spotifyCurrentTrack = data.item;
+            const trackName = data.item.name;
+            const artist = data.item.artists[0].name;
+            document.getElementById('currentTrack').textContent = `${trackName} by ${artist}`;
+            if (data.item.album.images[0]) {
+                document.getElementById('albumArt').src = data.item.album.images[0].url;
+            }
+            spotifyPlaybackState = data.is_playing;
+            document.getElementById('playPauseBtn').textContent = spotifyPlaybackState ? '⏸' : '▶';
+        }
+    } catch (error) {
+        console.error('Error fetching current track:', error);
+    }
+    setTimeout(updateCurrentTrack, 5000);
+}
+
+async function togglePlayback() {
+    if (!spotifyAccessToken) return;
+    try {
+        const method = spotifyPlaybackState ? 'PUT' : 'PUT';
+        const endpoint = spotifyPlaybackState ? 'https://api.spotify.com/v1/me/player/pause' : 'https://api.spotify.com/v1/me/player/play';
+        await fetch(endpoint, {
+            method: method,
+            headers: { 'Authorization': `Bearer ${spotifyAccessToken}` }
+        });
+        spotifyPlaybackState = !spotifyPlaybackState;
+        document.getElementById('playPauseBtn').textContent = spotifyPlaybackState ? '⏸' : '▶';
+    } catch (error) {
+        console.error('Error toggling playback:', error);
+    }
+}
+
+async function nextTrack() {
+    if (!spotifyAccessToken) return;
+    try {
+        await fetch('https://api.spotify.com/v1/me/player/next', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${spotifyAccessToken}` }
+        });
+    } catch (error) {
+        console.error('Error skipping to next track:', error);
+    }
+}
+
+async function previousTrack() {
+    if (!spotifyAccessToken) return;
+    try {
+        await fetch('https://api.spotify.com/v1/me/player/previous', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${spotifyAccessToken}` }
+        });
+    } catch (error) {
+        console.error('Error skipping to previous track:', error);
+    }
+}
+
 loadTimerAndStopwatchState();
 updateStudyTimeDisplay();
 updateTasksToday();
 attachPriorityCheckboxListeners();
+checkSpotifyAuth();
 renderTasks();

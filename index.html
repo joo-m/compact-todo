@@ -61,7 +61,25 @@
         <p>Total Study Time Today: <span id="studyTime">00:00:00</span></p>
         <p>Total Study Time This Week: <span id="studyTimeWeek">00:00:00</span></p>
         <p>Total Study Time This Year: <span id="studyTimeYear">00:00:00</span></p>
+        <p class="important-tasks-completed"><span id="importantTasksCompletedPercent">0</span>% (<span id="importantTasksCompletedFraction">0</span>/<span id="importantTasksTotal">0</span>) of important tasks completed</p>
         <p class="all-tasks-completed"><span id="allTasksCompletedPercent">0</span>% (<span id="allTasksCompletedFraction">0</span>/<span id="allTasksTotal">0</span>) of all tasks completed</p>
+    </div>
+
+    <div id="spotifyPlayer" class="spotify-box">
+        <h3>Spotify Music Player</h3>
+        <button onclick="connectSpotify()" id="spotifyConnectBtn" class="spotify-connect-btn">Connect to Spotify</button>
+        <div id="spotifyContent" class="spotify-content" style="display: none;">
+            <div class="currently-playing">
+                <p>Now Playing: <span id="currentTrack">Nothing playing</span></p>
+                <img id="albumArt" class="album-art" src="" alt="Album Art">
+            </div>
+            <div class="spotify-controls">
+                <button onclick="previousTrack()">⏮</button>
+                <button onclick="togglePlayback()" id="playPauseBtn">▶</button>
+                <button onclick="nextTrack()">⏭</button>
+            </div>
+            <button onclick="logoutSpotify()" class="spotify-logout-btn">Logout</button>
+        </div>
     </div>
 
     <div class="side-tools">

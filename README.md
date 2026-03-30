@@ -12,8 +12,9 @@ A comprehensive to-do list application with task management, timers, stopwatch, 
 - **Stopwatch**: Start, pause, and reset a stopwatch with millisecond precision, tracking total study time.
 - **Timer**: Set and run countdown timers with notifications, including Pomodoro mode.
 - **Pomodoro Timer**: Quick 25-minute study sessions with break reminders.
-- **Study Stats**: Track tasks completed today and total study time. Stats automatically reset at midnight each day.
+- **Study Stats**: Track tasks completed today and total study time. Stats automatically reset at midnight each day. Displays important tasks (high priority) completion percentage prominently.
 - **Intelligent Study Time Tracking**: Counts study time from either stopwatch or timer, preventing double-counting when both are running simultaneously.
+- **Spotify Music Player**: Connect your Spotify account and control music playback directly in the app. View currently playing track with album art and skip to next/previous tracks.
 - **YouTube**: Search YouTube or watch specific videos directly in the app (can be hidden in Focus Mode).
 - **Animated Background**: Subtle animated ASCII character background for aesthetic appeal.
 - **Real-time Updates**: Study time and task completion counts update in real-time as you work.
@@ -43,11 +44,17 @@ A comprehensive to-do list application with task management, timers, stopwatch, 
    - **Focus Mode**: Click "hide youtube" button to hide distractions (button darkens when active).
 
 6. **Study Stats**: View daily completed tasks and total study time in the stats section.
+   - Shows important tasks (High Priority) completion percentage in larger, bold text
    - Stats reset automatically at midnight (12:00 AM) each day.
    - Tasks are counted as completed only if finished on the current day.
    - Study time counts from running stopwatch and timer, but not both simultaneously to prevent double-counting.
 
-7. **Simultaneous Stopwatch and Timer Usage**:
+7. **Spotify Music Player**:
+   - Click "Connect to Spotify" button to authorize your Spotify account.
+   - View currently playing track with album art.
+   - Use play/pause, next, and previous buttons to control playback.
+   - Click "Logout" to disconnect your Spotify account.
+   - **Note**: Requires Spotify Web API credentials setup in the app configuration.
    - You can run both stopwatch and timer at the same time.
    - Study time will only count from one device to prevent inflated time tracking.
    - When one is paused or finished, the other automatically resumes study time counting.
@@ -55,6 +62,18 @@ A comprehensive to-do list application with task management, timers, stopwatch, 
 ## Installation
 
 No installation required. Open `index.html` in a web browser.
+
+## Spotify Setup
+
+To use the Spotify Music Player feature:
+
+1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+2. Log in or create a new Spotify account
+3. Create a new app and accept the terms
+4. Copy your Client ID
+5. In `script.js`, replace `'YOUR_CLIENT_ID_HERE'` with your actual Client ID
+6. In Spotify Dashboard, add your app's redirect URI (your webpage URL) to the "Redirect URIs" section
+7. Reload the app and click "Connect to Spotify" to authorize
 
 ## Technologies Used
 

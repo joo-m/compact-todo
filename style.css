@@ -107,6 +107,102 @@ body {
     margin-top: 10px;
 }
 
+.spotify-box {
+    background: #1DB954;
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 10px;
+    color: white;
+}
+
+.spotify-box h3 {
+    margin: 0 0 12px 0;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.spotify-connect-btn {
+    width: 100%;
+    padding: 10px;
+    background: #191414;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: background 0.3s ease;
+}
+
+.spotify-connect-btn:hover {
+    background: #282828;
+}
+
+.spotify-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.currently-playing {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.currently-playing p {
+    margin: 8px 0;
+    font-size: 0.9rem;
+}
+
+.album-art {
+    width: 100px;
+    height: 100px;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+.spotify-controls {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.spotify-controls button {
+    background: #191414;
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: background 0.3s ease;
+}
+
+.spotify-controls button:hover {
+    background: #282828;
+}
+
+.spotify-logout-btn {
+    width: 100%;
+    padding: 8px;
+    background: #191414;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.3s ease;
+}
+
+.spotify-logout-btn:hover {
+    background: #282828;
+}
+
 .study-stats h3 {
     margin: 0 0 8px 0;
     font-size: 1rem;
@@ -119,7 +215,12 @@ body {
 
 .all-tasks-completed {
     margin-top: 15px;
-    font-size: 1.2rem !important;
+    font-size: 0.9rem;
+}
+
+.important-tasks-completed {
+    margin-top: 15px;
+    font-size: 1.0rem !important;
     font-weight: bold !important;
 }
 
@@ -254,6 +355,10 @@ body.dark .time-display {
 
 body.dark .study-stats {
     background: #2c2c2c;
+}
+
+body.dark .spotify-box {
+    background: #1DB954;
 }
 
 body.timer-finish {
