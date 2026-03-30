@@ -7,6 +7,11 @@
 </head>
 <body>
 
+<div class="marquee-container">
+  <div class="marquee-content" aria-hidden="false">
+  </div>
+</div>
+
 <div class="app">
     <h1>TO-DO Studies</h1>
 
@@ -82,6 +87,11 @@
                 <button onclick="togglePlayback()" id="playPauseBtn">▶</button>
                 <button onclick="nextTrack()">⏭</button>
             </div>
+            <div class="spotify-progress">
+                <span id="currentTime">0:00</span>
+                <input type="range" id="progressSlider" min="0" max="100" value="0" step="1">
+                <span id="totalTime">0:00</span>
+            </div>
             <button onclick="logoutSpotify()" class="spotify-logout-btn">Logout</button>
         </div>
     </div>
@@ -123,6 +133,10 @@
             <iframe id="youtubePlayer" class="youtube-player" src="" allowfullscreen></iframe>
         </div>
     </div>
+</div>
+
+<div id="bottomProgressBar">
+    <input type="range" id="bottomProgressSlider" min="0" max="100" value="0" step="1">
 </div>
 
 <script src="script.js"></script>

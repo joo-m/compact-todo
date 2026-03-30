@@ -195,6 +195,13 @@ function formatTime(ms) {
     return `${hours}:${minutes}:${seconds}`;
 }
 
+function formatSongTime(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
 function updateStopwatchDisplay() {
     document.getElementById("stopwatchDisplay").textContent = formatStopwatch(stopwatchElapsed);
 }
@@ -424,6 +431,9 @@ function renderTasks() {
         const header = document.createElement("div");
         header.className = "task-header";
 
+        const leftPart = document.createElement("div");
+        leftPart.className = "task-left";
+
         const text = document.createElement("span");
         text.textContent = task.text;
 
@@ -471,8 +481,9 @@ function renderTasks() {
             }
         };
 
-        header.appendChild(priorityBtn);
-        header.appendChild(text);
+        leftPart.appendChild(priorityBtn);
+        leftPart.appendChild(text);
+        header.appendChild(leftPart);
         header.appendChild(deleteBtn);
 
         const date = document.createElement("div");
@@ -731,6 +742,7 @@ const SPOTIFY_CLIENT_ID = '65d8610a85544a1082be109c18754d21';
 const SPOTIFY_REDIRECT_URI = 'http://127.0.0.1:3000/callback'
 let spotifyAccessToken = localStorage.getItem('spotifyAccessToken');
 let spotifyCurrentTrack = null;
+let spotifyCurrentArtist = null;
 let spotifyPlaybackState = false;
 
 function generateRandomString(length) {
@@ -835,12 +847,6 @@ function hideSpotifyPlayer() {
     document.getElementById('spotifyContent').style.display = 'none';
 }
 
-function logoutSpotify() {
-    spotifyAccessToken = null;
-    localStorage.removeItem('spotifyAccessToken');
-    hideSpotifyPlayer();
-}
-
 async function updateCurrentTrack() {
     if (!spotifyAccessToken) return;
     try {
@@ -869,9 +875,10 @@ async function updateCurrentTrack() {
 
         const data = await response.json();
         if (data && data.item) {
-            spotifyCurrentTrack = data.item;
             const trackName = data.item.name;
             const artist = data.item.artists[0].name;
+            spotifyCurrentTrack = trackName;
+            spotifyCurrentArtist = artist;
             document.getElementById('currentTrack').textContent = `${trackName} by ${artist}`;
             if (data.item.album && data.item.album.images && data.item.album.images[0]) {
                 document.getElementById('albumArt').src = data.item.album.images[0].url;
@@ -880,16 +887,62 @@ async function updateCurrentTrack() {
             }
             spotifyPlaybackState = data.is_playing;
             document.getElementById('playPauseBtn').textContent = spotifyPlaybackState ? '⏸' : '▶';
+            const progressMs = data.progress_ms || 0;
+            const durationMs = data.item.duration_ms;
+            document.getElementById('progressSlider').max = durationMs;
+            document.getElementById('progressSlider').value = progressMs;
+            document.getElementById('bottomProgressSlider').max = durationMs;
+            document.getElementById('bottomProgressSlider').value = progressMs;
+            document.getElementById('currentTime').textContent = formatSongTime(progressMs);
+            document.getElementById('totalTime').textContent = formatSongTime(durationMs);
+            updateMarquee();
         } else {
+            spotifyCurrentTrack = null;
+            spotifyCurrentArtist = null;
             document.getElementById('currentTrack').textContent = 'Nothing playing';
             document.getElementById('albumArt').src = '';
             spotifyPlaybackState = false;
             document.getElementById('playPauseBtn').textContent = '▶';
+            document.getElementById('progressSlider').max = 100;
+            document.getElementById('progressSlider').value = 0;
+            document.getElementById('bottomProgressSlider').max = 100;
+            document.getElementById('bottomProgressSlider').value = 0;
+            document.getElementById('currentTime').textContent = '0:00';
+            document.getElementById('totalTime').textContent = '0:00';
+            updateMarquee();
         }
     } catch (error) {
         console.error('Error fetching current track:', error);
     }
-    setTimeout(updateCurrentTrack, 5000);
+    setTimeout(updateCurrentTrack, 1000);
+}
+
+function updateMarquee() {
+    const marqueeContent = document.querySelector('.marquee-content');
+    if (!spotifyCurrentTrack || !spotifyCurrentArtist) {
+        marqueeContent.innerHTML = '';
+        return;
+    }
+    const text = `‎ ‎ ‎ ‎ ‎ now playing: ${spotifyCurrentTrack} by ${spotifyCurrentArtist} `;
+    const repeated = text.repeat(50);
+    marqueeContent.innerHTML = `<span>${repeated}</span><span>${repeated}</span>`;
+}
+
+async function seekPosition(positionMs) {
+    if (!spotifyAccessToken) return;
+    try {
+        const response = await fetch(`https://api.spotify.com/v1/me/player/seek?position_ms=${positionMs}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${spotifyAccessToken}`
+            }
+        });
+        if (!response.ok) {
+            console.error('Error seeking:', response.status, await response.text());
+        }
+    } catch (error) {
+        console.error('Error seeking position:', error);
+    }
 }
 
 async function togglePlayback() {
@@ -961,6 +1014,14 @@ async function previousTrack() {
     }
 }
 
+document.getElementById('progressSlider').addEventListener('input', (e) => {
+    seekPosition(e.target.value);
+});
+
+document.getElementById('bottomProgressSlider').addEventListener('input', (e) => {
+    seekPosition(e.target.value);
+});
+
 loadTimerAndStopwatchState();
 updateStudyTimeDisplay();
 updateTasksToday();
@@ -968,3 +1029,4 @@ attachPriorityCheckboxListeners();
 checkSpotifyAuth();
 updateToggleButtons();
 renderTasks();
+updateMarquee();

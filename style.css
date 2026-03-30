@@ -4,9 +4,89 @@ body {
     display: flex;
     justify-content: center;
     margin-top: 60px;
+    margin-bottom: 40px;
     position: relative;
     overflow-y: auto;
 }
+
+#bottomProgressBar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.8);
+    padding: 10px;
+    z-index: 1000;
+}
+
+#bottomProgressSlider {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 8px;
+    background: #ddd;
+    border-radius: 5px;
+    outline: none;
+}
+
+#bottomProgressSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #1DB954;
+    cursor: pointer;
+}
+
+#bottomProgressSlider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #1DB954;
+    cursor: pointer;
+    border: none;
+}
+
+.marquee-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  box-sizing: border-box;
+  background: rgba(0,0,0,0.8);
+  color: white;
+  font-size: 14px;
+  padding: 5px 0;
+  z-index: 1000;
+}
+
+.marquee-content {
+  display: inline-block;
+  width: max-content; 
+  animation: scroll-left 500s linear infinite; 
+}
+
+.marquee-content span {
+  display: inline-block;
+  margin-right: 20px; 
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-container:hover .marquee-content {
+  animation-play-state: paused;
+}
+
 
 .app {
     position: relative;
@@ -184,6 +264,47 @@ body {
 
 .spotify-controls button:hover {
     background: #282828;
+}
+
+.spotify-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.spotify-progress span {
+    font-size: 0.9rem;
+    color: white;
+}
+
+#progressSlider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    background: #ddd;
+    border-radius: 5px;
+    outline: none;
+}
+
+#progressSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #1DB954;
+    cursor: pointer;
+}
+
+#progressSlider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #1DB954;
+    cursor: pointer;
+    border: none;
 }
 
 .spotify-logout-btn {
@@ -546,7 +667,12 @@ button:not(.delete-btn):not(.priority-btn):hover {
 
 .task-header {
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.task-left {
+    display: flex;
     align-items: center;
     gap: 8px;
 }
